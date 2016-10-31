@@ -10,7 +10,7 @@ import java.util.Arrays;
 public class StopWords {
 
     public static boolean isStopWord(String word) {
-        if (word.length() <= 2) {
+        if (word.length() < 2) {
             return true;
         }
 

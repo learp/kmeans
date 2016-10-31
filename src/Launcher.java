@@ -13,11 +13,11 @@ import java.util.*;
 
 public class Launcher {
 
-    public static final int COUNT_OF_ARTICLES = 10;
+    public static final int COUNT_OF_ARTICLES = 7;
     public static Map<String, Set<Point>> topicToPoint = new HashMap<>();
 
     public static void main(String[] args) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
-        String fileName = "/home/learp/web/reut2-00%d.sgm";
+        String fileName = "/home/learp/texts/reut2-00%d.sgm";
         Map<String, Integer> wordToNumber;
         List<Article> articles = new ArrayList<>();
 

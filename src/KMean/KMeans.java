@@ -38,13 +38,13 @@ public class KMeans {
 
     private boolean max(Point point, List<Double> distance) {
         for (Cluster cluster : clusters) {
-            if (point.distanceTo(cluster.centroid) < distance.get(cluster.id)) {
+            if (point.cosineDistanceTo(cluster.centroid) < distance.get(cluster.id)) {
                 return false;
             }
         }
 
         for (Cluster cluster : clusters) {
-            distance.set(cluster.id, point.distanceTo(cluster.centroid));
+            distance.set(cluster.id, point.cosineDistanceTo(cluster.centroid));
         }
 
         return true;
@@ -87,7 +87,7 @@ public class KMeans {
             double min = Double.MAX_VALUE;
 
             for(Cluster cluster : clusters) {
-                double distance = point.distanceTo(cluster.centroid);
+                double distance = point.cosineDistanceTo(cluster.centroid);
 
                 if (distance < min) {
                     min = distance;

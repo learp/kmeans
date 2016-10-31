@@ -12,7 +12,7 @@ public class Article {
     }
 
     public String getAllText() {
-        return text + " " + " " + title + " " + topic;
+        return text + " " + title + " " + topic;
     }
 
     public String text;
