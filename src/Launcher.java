@@ -7,7 +7,6 @@ import Parser.XMLParser;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPathExpressionException;
 import java.io.*;
 import java.util.*;
 
@@ -16,7 +15,7 @@ public class Launcher {
     public static final int COUNT_OF_ARTICLES = 7;
     public static Map<String, Set<Point>> topicToPoint = new HashMap<>();
 
-    public static void main(String[] args) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+    public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException {
         String fileName = "/home/learp/texts/reut2-00%d.sgm";
         Map<String, Integer> wordToNumber;
         List<Article> articles = new ArrayList<>();
@@ -40,31 +39,42 @@ public class Launcher {
         print(kMeans);
     }
 
-    private static void print(KMeans kMeans) {
-        for (Cluster cluster : kMeans.getClusters()) {
-            Map<String, Integer> topicToCount = new HashMap<>();
+    private static List<Article> filterArticles(List<Article> articles, int countOfArticles) {
+        List<Article> result = new ArrayList<>();
+        Set<String> topic = new HashSet<>();
 
-            for (Point point : cluster.getPoints()) {
-                for (String topic : topicToPoint.keySet()) {
-                    if (topicToPoint.get(topic).contains(point)) {
-                        if (!topicToCount.containsKey(topic)) {
-                            topicToCount.put(topic, 1);
-                        } else {
-                            topicToCount.put(topic, topicToCount.get(topic) + 1);
-                        }
-                    }
-                }
+        for (Article article : articles) {
+            if (topic.size() < countOfArticles) {
+                topic.add(article.topic);
             }
 
-            System.out.println(topicToCount);
+            if (topic.contains(article.topic)) {
+                result.add(article);
+            }
         }
 
-        System.out.println();
+        return result;
+    }
 
-        for (String topic : topicToPoint.keySet()) {
-            System.out.println("Topic: " + topic);
-            System.out.println("Points: " + topicToPoint.get(topic).size());
+    private static Map<String, Integer> formKeyWordsFrom(List<Article> articles) {
+        Map<String, Integer> wordToNumber = new HashMap<>();
+
+        for (Article article : articles) {
+            StringTokenizer tokenizer = new StringTokenizer(
+                    article.getAllText(),
+                    " \t\n,.!?-:/\\+\"\'<>();&");
+
+            while (tokenizer.hasMoreTokens()) {
+                String word = tokenizer.nextToken().toLowerCase();
+                word = StopWords.stem(word);
+
+                if (!StopWords.isStopWord(word) && !wordToNumber.containsKey(word)) {
+                    wordToNumber.put(word, wordToNumber.size());
+                }
+            }
         }
+
+        return wordToNumber;
     }
 
     private static Set<Point> formPointsFrom(Map<String, Integer> keyWordToNumber, List<Article> articles) {
@@ -105,41 +115,30 @@ public class Launcher {
         return points;
     }
 
-    private static Map<String, Integer> formKeyWordsFrom(List<Article> articles) {
-        Map<String, Integer> wordToNumber = new HashMap<>();
+    private static void print(KMeans kMeans) {
+        for (Cluster cluster : kMeans.getClusters()) {
+            Map<String, Integer> topicToCount = new HashMap<>();
 
-        for (Article article : articles) {
-            StringTokenizer tokenizer = new StringTokenizer(
-                    article.getAllText(),
-                    " \t\n,.!?-:/\\+\"\'<>();&");
-
-            while (tokenizer.hasMoreTokens()) {
-                String word = tokenizer.nextToken().toLowerCase();
-                word = StopWords.stem(word);
-
-                if (!StopWords.isStopWord(word) && !wordToNumber.containsKey(word)) {
-                    wordToNumber.put(word, wordToNumber.size());
+            for (Point point : cluster.getPoints()) {
+                for (String topic : topicToPoint.keySet()) {
+                    if (topicToPoint.get(topic).contains(point)) {
+                        if (!topicToCount.containsKey(topic)) {
+                            topicToCount.put(topic, 1);
+                        } else {
+                            topicToCount.put(topic, topicToCount.get(topic) + 1);
+                        }
+                    }
                 }
             }
+
+            System.out.println(topicToCount);
         }
 
-        return wordToNumber;
-    }
+        System.out.println();
 
-    private static List<Article> filterArticles(List<Article> articles, int countOfArticles) {
-        List<Article> result = new ArrayList<>();
-        Set<String> topic = new HashSet<>();
-
-        for (Article article : articles) {
-            if (topic.size() < countOfArticles) {
-                topic.add(article.topic);
-            }
-
-            if (topic.contains(article.topic)) {
-                result.add(article);
-            }
+        for (String topic : topicToPoint.keySet()) {
+            System.out.println("Topic: " + topic);
+            System.out.println("Points: " + topicToPoint.get(topic).size());
         }
-
-        return result;
     }
 }

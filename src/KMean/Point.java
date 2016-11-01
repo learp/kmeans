@@ -52,6 +52,12 @@ public class Point {
         }
     }
 
+    Point sum(Point right) {
+        for (int i = 0; i < vector.size(); i++) {
+            vector.set(i, vector.get(i) + right.vector.get(i));
+        }
+    }
+
     void divide(int div) {
         for (int i = 0; i < vector.size(); i++) {
             vector.set(i, vector.get(i)/div);

@@ -2,7 +2,7 @@ package KMean;
 
 import java.util.*;
 
-public class KMeans {
+public class KMeans implements Runnable {
 
     public KMeans(Collection<Point> points, int clusterCount, Random random) {
         prepareAndCheck(points);
@@ -71,6 +71,7 @@ public class KMeans {
         return clusters;
     }
 
+    @Override
     public void run() {
         boolean needUpdate = true;
 
