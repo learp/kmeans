@@ -1,9 +1,8 @@
 package KMean;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
+import Jama.Matrix;
+
+import java.util.*;
 
 public class EM implements Runnable {
 
@@ -12,35 +11,66 @@ public class EM implements Runnable {
     }
 
     public EM(Collection<Point> points, int clusterCount, double epsilon) {
+        prepareAndCheck(points);
 
+        double tmp[][] = new double[points.size()][dimension];
+        Iterator<Point> point = points.iterator();
+
+        for (int i = 0; i < points.size(); i++) {
+            tmp[i] = Arrays.copyOf(
+                    point.next().getVector().stream().mapToDouble(Double::doubleValue).toArray(), dimension
+            );
+        }
+
+        this.points = new Matrix(tmp, points.size(), dimension);
+        this.clusterCount = clusterCount;
         this.epsilon = epsilon;
+    }
+
+    private void prepareAndCheck(Collection<Point> points) {
+        if (points.isEmpty()) {
+            throw new IllegalArgumentException("list of poins is empty");
+        }
+
+        Iterator<Point> it = points.iterator();
+        dimension = it.next().vector.size();
+        while (it.hasNext()) {
+            if (dimension != it.next().vector.size()) {
+                throw new IllegalArgumentException("different size");
+            }
+        }
     }
 
     @Override
     public void run() {
-        double mathExpectation[][] = new double[dimension][clusters.size()];
-        double cov[][] = new double[dimension][dimension];
-        double weight[] = new double[clusters.size()];
-        double x[] = new double[clusters.size()];
+        Matrix mathExpectation = new Matrix(clusterCount, dimension);
+        Matrix cov = new Matrix(dimension, dimension);
+        Matrix weight = new Matrix(clusterCount, 1, 1/clusterCount);
+        Matrix x = new Matrix(clusterCount, 1);
 
         Random random = new Random(37);
-        for (int i = 0; i < dimension; i++) {
-            cov[i][i] = 1;
-
-            for (int j = 0; j < clusters.size(); j++) {
-                mathExpectation[i][j] = random.nextDouble();
-                weight[j] = 1/clusters.size();
+        for (int i = 0; i < clusterCount; i++) {
+            for (int j = 0; j < dimension; j++) {
+                mathExpectation.set(i, j, random.nextDouble());
+                cov.set(j, j, 1);
             }
         }
 
         double lgCur = 0, lgPrev = 0;
 
         do {
-            for (int i = 0; i < points.size(); i++) {
+            lgPrev = lgCur;
+
+            for (int i = 0; i < points.getRowDimension(); i++) {
                 double spi = 0;
 
-                for (int j = 0; j < clusters.size(); j++) {
-
+                for (int j = 0; j < clusterCount; j++) {
+                    double qij = points.getMatrix(i, i, 0, dimension - 1).minus(mathExpectation.getMatrix(j, j, 0, dimension - 1)).transpose().
+                    times(cov.inverse()).
+                    times(points.getMatrix(i, i, 0, dimension - 1).minus(mathExpectation.getMatrix(j, j, 0, dimension - 1))).get(0, 0);
+                    System.out.println(qij);
+                    double pij = weight.get(j, 1) / (Math.pow((2 * Math.PI), dimension / 2) * Math.sqrt(cov.det())) * Math.exp(-1/2  * qij);
+                    spi += pij;
                 }
 
             }
@@ -48,8 +78,8 @@ public class EM implements Runnable {
         } while(Math.abs(lgCur - lgPrev) >= epsilon);
     }
 
-    List<Cluster> clusters;
-    Set<Point> points;
+    int clusterCount;
+    Matrix points;
     int dimension;
     double epsilon;
 }

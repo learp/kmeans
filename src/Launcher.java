@@ -1,4 +1,5 @@
 import KMean.Cluster;
+import KMean.EM;
 import KMean.KMeans;
 import KMean.Point;
 import Parser.Article;
@@ -30,13 +31,19 @@ public class Launcher {
         articles = filterArticles(articles, COUNT_OF_ARTICLES);
         wordToNumber = formKeyWordsFrom(articles);
 
-        KMeans kMeans = new KMeans(
+        //KMeans kMeans = new KMeans(
+                //formPointsFrom(wordToNumber, articles),
+                //COUNT_OF_ARTICLES);
+
+        //kMeans.run();
+
+        EM em = new EM(
                 formPointsFrom(wordToNumber, articles),
                 COUNT_OF_ARTICLES);
 
-        kMeans.run();
+        em.run();
 
-        print(kMeans);
+        //print(kMeans);
     }
 
     private static List<Article> filterArticles(List<Article> articles, int countOfArticles) {
