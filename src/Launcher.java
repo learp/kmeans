@@ -17,7 +17,7 @@ public class Launcher {
     public static Map<String, Set<Point>> topicToPoint = new HashMap<>();
 
     public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException {
-        String fileName = "/home/learp/texts/reut2-00%d.sgm";
+/*        String fileName = "/home/learp/texts/reut2-00%d.sgm";
         Map<String, Integer> wordToNumber;
         List<Article> articles = new ArrayList<>();
 
@@ -31,16 +31,22 @@ public class Launcher {
         articles = filterArticles(articles, COUNT_OF_ARTICLES);
         wordToNumber = formKeyWordsFrom(articles);
 
-        //KMeans kMeans = new KMeans(
-                //formPointsFrom(wordToNumber, articles),
-                //COUNT_OF_ARTICLES);
+*/
+        Random random = new Random(37);
+        List<Point> points = new ArrayList<>();
 
-        //kMeans.run();
+        for (int i = 0; i < 4; i++) {
 
-        EM em = new EM(
-                formPointsFrom(wordToNumber, articles),
-                COUNT_OF_ARTICLES);
 
+            for (int j = 0; j < (i + 1) * 30; j++) {
+                points.add(new Point(Arrays.asList((random.nextDouble() + i) * 10, (random.nextDouble() + i) * 10)));
+            }
+        }
+
+        KMeans kMeans = new KMeans(points, 4);
+        kMeans.run();
+
+        EM em = new EM(points, 4);
         em.run();
 
         //print(kMeans);

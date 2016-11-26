@@ -1,7 +1,6 @@
 package KMean;
 
 import Jama.Matrix;
-
 import java.util.*;
 
 public class EM implements Runnable {
@@ -18,7 +17,7 @@ public class EM implements Runnable {
 
         for (int i = 0; i < points.size(); i++) {
             tmp[i] = Arrays.copyOf(
-                    point.next().getVector().stream().mapToDouble(Double::doubleValue).toArray(), dimension
+                point.next().getVector().stream().mapToDouble(Double::doubleValue).toArray(), dimension
             );
         }
 
@@ -34,6 +33,7 @@ public class EM implements Runnable {
 
         Iterator<Point> it = points.iterator();
         dimension = it.next().vector.size();
+
         while (it.hasNext()) {
             if (dimension != it.next().vector.size()) {
                 throw new IllegalArgumentException("different size");
@@ -45,8 +45,13 @@ public class EM implements Runnable {
     public void run() {
         Matrix mathExpectation = new Matrix(clusterCount, dimension);
         Matrix cov = new Matrix(dimension, dimension);
-        Matrix weight = new Matrix(clusterCount, 1, 1/clusterCount);
-        Matrix x = new Matrix(clusterCount, 1);
+        Matrix weight = new Matrix(clusterCount, 1, 1d/clusterCount);
+
+        Matrix _mathExpectation = new Matrix(clusterCount, dimension);
+        Matrix _cov = new Matrix(dimension, dimension);
+        Matrix _weight = new Matrix(clusterCount, 1, 1d/clusterCount);
+
+        Matrix x = new Matrix(points.getRowDimension(), clusterCount);
 
         Random random = new Random(37);
         for (int i = 0; i < clusterCount; i++) {
@@ -56,7 +61,7 @@ public class EM implements Runnable {
             }
         }
 
-        double lgCur = 0, lgPrev = 0;
+        double lgCur = 0, lgPrev;
 
         do {
             lgPrev = lgCur;
@@ -65,14 +70,34 @@ public class EM implements Runnable {
                 double spi = 0;
 
                 for (int j = 0; j < clusterCount; j++) {
-                    double qij = points.getMatrix(i, i, 0, dimension - 1).minus(mathExpectation.getMatrix(j, j, 0, dimension - 1)).transpose().
+                    double qij = points.getMatrix(i, i, 0, dimension - 1).minus(mathExpectation.getMatrix(j, j, 0, dimension - 1)).
                     times(cov.inverse()).
-                    times(points.getMatrix(i, i, 0, dimension - 1).minus(mathExpectation.getMatrix(j, j, 0, dimension - 1))).get(0, 0);
-                    System.out.println(qij);
-                    double pij = weight.get(j, 1) / (Math.pow((2 * Math.PI), dimension / 2) * Math.sqrt(cov.det())) * Math.exp(-1/2  * qij);
+                    times(
+                            points.getMatrix(i, i, 0, dimension - 1).minus(mathExpectation.getMatrix(j, j, 0, dimension - 1)).transpose()
+                    ).get(0, 0);
+
+                    double pij = weight.get(j, 0) / (Math.pow((2 * Math.PI), dimension / 2d) * Math.sqrt(cov.det())) * Math.exp(-1d/2  * qij);
+                    x.set(i, j, pij);
                     spi += pij;
                 }
 
+                x.getMatrix(i, i, 0, clusterCount - 1).times(1/spi);
+                lgCur += Math.log(spi);
+
+                _mathExpectation.plusEquals(
+                        points.getMatrix(i, i, 0, dimension - 1).times(
+                                x.getMatrix(i, i, 0, clusterCount - 1)).transpose()
+                );
+
+                _weight.plusEquals(x.getMatrix(i, i, 0, dimension - 1));
+            }
+
+            for (int j = 0; j < clusterCount; j++) {
+                mathExpectation.setMatrix(0, _mathExpectation.getRowDimension() - 1, 0, _mathExpectation.getColumnDimension() - 1, _mathExpectation.times(_weight.get(j, 0)));
+
+                for (int i = 0; i < points.getRowDimension(); i++) {
+                    _cov.plusEquals(points.getMatrix(i, i, 0, dimension - 1).minus(mathExpectation.getMatrix(j, j, 0, dimension - 1))
+                }
             }
 
         } while(Math.abs(lgCur - lgPrev) >= epsilon);
