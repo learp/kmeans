@@ -85,20 +85,28 @@ public class EM implements Runnable {
                 lgCur += Math.log(spi);
 
                 _mathExpectation.plusEquals(
-                        points.getMatrix(i, i, 0, dimension - 1).times(
-                                x.getMatrix(i, i, 0, clusterCount - 1)).transpose()
+                        points.getMatrix(i, i, 0, dimension - 1).transpose().times(
+                            x.getMatrix(i, i, 0, clusterCount - 1)
+                        ).transpose()
                 );
 
-                _weight.plusEquals(x.getMatrix(i, i, 0, dimension - 1));
+                _weight.plusEquals(x.getMatrix(i, i, 0, clusterCount - 1).transpose());
             }
 
             for (int j = 0; j < clusterCount; j++) {
                 mathExpectation.setMatrix(0, _mathExpectation.getRowDimension() - 1, 0, _mathExpectation.getColumnDimension() - 1, _mathExpectation.times(_weight.get(j, 0)));
 
                 for (int i = 0; i < points.getRowDimension(); i++) {
-                    _cov.plusEquals(points.getMatrix(i, i, 0, dimension - 1).minus(mathExpectation.getMatrix(j, j, 0, dimension - 1))
+                    _cov.plusEquals(
+                            points.getMatrix(i, i, 0, dimension - 1).minus(mathExpectation.getMatrix(j, j, 0, dimension - 1))
+                            .times(x.get(i,j)).transpose()
+                            .times((points.getMatrix(i, i, 0, dimension - 1)
+                            .minus(mathExpectation.getMatrix(j, j, 0, dimension - 1)))));
                 }
             }
+
+            cov.setMatrix(0, _cov.getColumnDimension() - 1, 0, _cov.getColumnDimension() - 1, _cov.times(1d/points.getRowDimension()));
+            weight.setMatrix(0, _weight.getColumnDimension() - 1, 0, _weight.getColumnDimension() - 1, _weight.times(1d/points.getRowDimension()));
 
         } while(Math.abs(lgCur - lgPrev) >= epsilon);
     }

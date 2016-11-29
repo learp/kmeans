@@ -36,10 +36,8 @@ public class Launcher {
         List<Point> points = new ArrayList<>();
 
         for (int i = 0; i < 4; i++) {
-
-
-            for (int j = 0; j < (i + 1) * 30; j++) {
-                points.add(new Point(Arrays.asList((random.nextDouble() + i) * 10, (random.nextDouble() + i) * 10)));
+            for (int j = 0; j < 10; j++) {
+                points.add(new Point(Arrays.asList((random.nextDouble()), (random.nextDouble()))));
             }
         }
 
